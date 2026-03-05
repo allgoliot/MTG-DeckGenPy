@@ -1,0 +1,21 @@
+name,type_line,oracle_text,mana_value,color_identity,quantity
+"Sol Ring","Artifact","{T}: Add {C}{C}.",1,"{C}",4
+"Arcane Signet","Artifact","{T}: Add one mana of any color in your Commander's color identity.",2,"{W}{U}{B}{R}{G}",2
+"Lightning Bolt","Instant","Lightning Bolt deals 3 damage to any target.",1,"{R}",4
+"Counterspell","Instant","Counter target spell.",2,"{U}",3
+"Swords to Plowshares","Instant","Exile target creature. That creature's controller gains life equal to its power.",1,"{W}",4
+"Demonic Tutor","Sorcery","Search your library for a card, put it into your hand, then shuffle.",2,"{B}",2
+"Beast Within","Instant","Destroy target permanent. Its controller creates a 3/3 green Beast creature token.",3,"{G}",2
+"Command Tower","Land","{T}: Add one mana of any color in your Commander's color identity.",0,"{W}{U}{B}{R}{G}",1
+"Swiftfoot Boots","Artifact","Equipped creature has haste and shroud. Equip {1}",2,"{C}",1
+"Chaos Warp","Sorcery","The owner of target permanent shuffles it into their library, then reveals the top card of their library. That player puts that card onto the battlefield.",3,"{R}",1
+"Path to Exile","Instant","Exile target creature. Its controller may search their library for a basic land card, put that card onto the battlefield tapped, then shuffle.",1,"{W}",4
+"Murder","Sorcery","Destroy target creature.",3,"{B}",2
+"Rampant Growth","Sorcery","Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.",2,"{G}",4
+"Brainstorm","Instant","Draw three cards, then put two cards from your hand on top of your library in any order.",1,"{U}",4
+"Mana Crypt","Artifact","At the beginning of your upkeep, flip a coin. If you lose the flip, Mana Crypt deals 3 damage to you. {T}: Add {C}{C}.",0,"{C}",1
+"Rhystic Study","Enchantment","Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.",3,"{U}",1
+"Smothering Tithe","Enchantment","Whenever an opponent draws a card, they may pay {2}. If they don't, you create a Treasure token.",2,"{W}",1
+"Winds of Change","Sorcery","Each player shuffles the cards from their hand into their library, then draws that many cards. Winds of Change deals 1 damage to each player.",1,"{R}",1
+"Wheel of Fortune","Sorcery","Each player discards their hand, then draws seven cards.",3,"{R}",1
+"Blasphemous Act","Sorcery","Blasphemous Act deals 13 damage to each creature. This spell costs {1} less to cast for each creature on the battlefield.",7,"{R}",1

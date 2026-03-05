@@ -320,6 +320,36 @@ if not commanders.empty:
 commanders = commanders.drop_duplicates(subset=['name'], keep='first')
 print(f"\n🎯 {len(commanders)} commandants uniques disponibles pour le bracket {BRACKET_LEVEL}\n")
 
+# ==========================================
+# FONCTIONS D'AFFICHAGE DES COULEURS DE MANA
+# ==========================================
+COLOR_SYMBOLS = {
+    'W': '⚪',  # Blanc
+    'U': '🔵',  # Bleu
+    'B': '⚫',  # Noir
+    'R': '🔴',  # Rouge
+    'G': '🟢',  # Vert
+    'C': '⚪'   # Incolore
+}
+
+def format_colors(colors_set):
+    """Formate les couleurs avec des symboles colorés.
+    
+    N'affiche PAS les couleurs incolores (C).
+    """
+    if not colors_set:
+        return '⚪'  # Incolore
+    
+    # Exclure la couleur incolore (C) de l'affichage
+    colored = [c for c in colors_set if c != 'C']
+    
+    if not colored:
+        return ''  # Uniquement incolore, on n'affiche rien
+    
+    sorted_colors = sorted(colored)
+    symbols = [COLOR_SYMBOLS.get(c, c) for c in sorted_colors]
+    return ''.join(symbols)
+
 # menu de sélection interactif avec confirmation de l'oracle text
 commander = None
 while commander is None:
@@ -329,7 +359,8 @@ while commander is None:
         bracket_grp = row.get('bracket_group', '?')
         tribes = row.get('tribes', [])
         tribe_str = f" [{' '.join(tribes)}]" if tribes else ""
-        print(f"{idx+1}. {row['name']}{tribe_str} [bracket {bracket_grp}] ({','.join(sorted(colors))})")
+        color_symbols = format_colors(colors)
+        print(f"{idx+1}. {row['name']}{tribe_str} [bracket {bracket_grp}] {color_symbols}")
     try:
         choice = int(input("Entrez le numéro du commandant à utiliser : ")) - 1
         if choice < 0 or choice >= len(commanders):

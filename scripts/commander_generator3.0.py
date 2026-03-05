@@ -835,13 +835,14 @@ if os.path.isdir(LIB_DIR):
     decks_trouves = []
     for fname in os.listdir(LIB_DIR):
         # Ignorer le deck en cours de création
-        if fname == os.path.basename(filename) if 'filename' in locals() else False:
+        current_filename = os.path.basename(filename) if "filename" in locals() else ""
+        if fname == current_filename:
             continue
-            
+
         path = os.path.join(LIB_DIR, fname)
         if not os.path.isfile(path):
             continue
-        
+
         decks_trouves.append(fname)
         
         # essayer plusieurs encodages pour la compatibilité
@@ -1070,10 +1071,13 @@ logger = logging.getLogger(__name__)
 
 logger.info("=" * 60)
 logger.info(f"Génération du deck : {commander_name}")
-logger.info(f"Bracket: {BRACKET_LEVEL} - {BRACKET_NAMES.get(BRACKET_LEVEL, 'Inconnu')}")
+bracket_name = BRACKET_NAMES.get(BRACKET_LEVEL, "Inconnu")
+logger.info(f"Bracket: {BRACKET_LEVEL} - {bracket_name}")
 logger.info(f"Commandant: {commander_name}")
-logger.info(f"Tribus: {', '.join(commander_tribus) if commander_tribus else 'Aucune'}")
-logger.info(f"Thèmes: {', '.join(commander_themes) if commander_themes else 'Aucun'}")
+tribus_str = ", ".join(commander_tribus) if commander_tribus else "Aucune"
+logger.info(f"Tribus: {tribus_str}")
+themes_str = ", ".join(commander_themes) if commander_themes else "Aucun"
+logger.info(f"Thèmes: {themes_str}")
 logger.info("=" * 60)
 
 # si le filtrage ou le manque de cartes a produit moins que prévu, demander à l'utilisateur
@@ -1131,13 +1135,13 @@ with open(filename, "w", encoding="utf-8") as f:
         f.write(f"{cnt} {name}\n")
 
 print(f"Deck généré et sauvegardé dans '{filename}' !")
-logger.info(f"Deck sauvegardé : {filename}")
-logger.info(f"Deck exporté : {export_filename if 'export_filename' in locals() else 'N/A'}")
-logger.info(f"Score de puissance : {score_puissance}/10")
-logger.info(f"Cartes exclues (doublons) : {len(excluded_cards)}")
-logger.info(f"Cartes en commun avec autres decks : {len(cartes_en_commun) if 'cartes_en_commun' in locals() else 0}")
+logger.info("Deck sauvegardé : %s", filename)
+export_status = export_filename if "export_filename" in locals() else "N/A"
+logger.info("Deck exporté : %s", export_status)
+logger.info("Score de puissance : %s/10", score_puissance)
+logger.info("Cartes exclues (doublons) : %s", len(excluded_cards))
+# Note: cartes_en_commun sera logué plus tard dans la section d'analyse
 logger.info("=" * 60)
-logging.shutdown()
 
 # =============================
 # 9. VÉRIFICATION DU BRACKET
@@ -2001,9 +2005,11 @@ if library_check_done and library_cards_used:
     else:
         print("\n✅ AUCUNE CARTE EN COMMUN")
         print("   Toutes les cartes de ce deck sont uniques !\n")
+        logger.info("Aucune carte en commun avec d'autres decks")
 else:
     print("\n⚠️  Bibliothèque non vérifiée")
     print("   L'analyse des doublons n'a pas pu être effectuée.")
+    logger.warning("Bibliothèque non vérifiée")
 
 # calculer et afficher le score de puissance
 score_puissance = calculer_score_puissance(rapport_bracket)
@@ -2060,6 +2066,14 @@ if not suggestions_affichees:
     print("   ✅ Aucune amélioration nécessaire - Deck optimisé !")
 
 print()
+
+# Finaliser le logging
+logger.info(f"Score de puissance : {score_puissance}/10")
+logger.info(f"Cartes exclues (doublons) : {len(excluded_cards)}")
+if 'cartes_en_commun' in locals():
+    logger.info(f"Cartes en commun avec autres decks : {len(cartes_en_commun)}")
+logger.info("=" * 60)
+logging.shutdown()
 
 # =============================
 # 10. EXPORT POUR SITES D'ANALYSE

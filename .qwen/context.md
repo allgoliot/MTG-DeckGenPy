@@ -1,14 +1,36 @@
 # Contexte du Projet - MTG DeckGenPy
 
+**Dernière mise à jour :** 2026-03-07
+
 ## 📋 Description
-Générateur automatique de decks Magic: The Gathering (Commander/EDH) basé sur une collection personnelle, avec support des **brackets officiels EDH** et **vérification des doublons**.
+
+Générateur automatique de decks **Magic: The Gathering (Commander/EDH)** basé sur une collection personnelle, avec support des **brackets officiels EDH** et **vérification des doublons**.
+
+**Architecture actuelle :** CLI et GUI partagent le **MÊME moteur de génération** pour une cohérence parfaite.
+
+---
 
 ## 🎯 Fonctionnalités principales
-- **Brackets officiels EDH** (1-4 : Exhibition, Core, Upgraded, Optimized)
+
+### 🧠 Moteur de Génération Commun
+- **Module unique** : `scripts/deck_generator.py`
+- **Utilisé par** : CLI (`commander_generator3_0.py`) et GUI (`gui_app.py`)
+- **Garantie** : CLI et GUI génèrent **exactement les mêmes decks**
+
+### 🎮 Brackets officiels EDH (1-4)
+| Bracket | Nom | Game Changers | Tutors | Combos Infinis |
+|---------|-----|---------------|--------|----------------|
+| 1 | Exhibition | 0 | 2 | ❌ |
+| 2 | Core | 0 | 4 | ❌ |
+| 3 | Upgraded | 3 | 6 | ❌ |
+| 4 | Optimized | ∞ | ∞ | ✅ |
+
+### 📊 Fonctionnalités Avancées
 - **Scoring intelligent** des cartes par synergies avec le commandant
 - **Gestion des couleurs** (forces/faiblesses par couleur)
-- **Mana base intelligente** (répartition par couleur)
-- **Vérification des doublons** avec les decks existants (`check_existing_decks`)
+- **Mana base intelligente** avec répartition optimale
+- **Filtre de tribu** (créatures UNIQUEMENT)
+- **Vérification des doublons** avec les decks existants
 - **Export decklist** pour brackcheck.com, Manabox, EDHREC
 - **Analyse détaillée** des pré-requis par bracket
 - **Rapport de conformité** avec suggestions d'amélioration
@@ -16,20 +38,49 @@ Générateur automatique de decks Magic: The Gathering (Commander/EDH) basé sur
 - **Logging complet** (effet tee -a) dans `logs/`
 - **Affichage coloré** des symboles de mana (⚪🔵⚫🔴🟢)
 
-## 📁 Fichiers importants
+---
 
-| Fichier | Rôle |
-|---------|------|
-| `scripts/commander_generator3.0.py` | Script principal de génération |
-| `scripts/enriching_collection.py` | Script d'enrichissement de la collection |
-| `conf/config.yaml` | Configuration active (à créer) |
-| `conf/config.example.yaml` | Configuration exemple |
-| `models/collection_modele.csv` | Modèle de collection |
-| `data/collection.csv` | Collection brute (à remplir) |
-| `data/collection_enriched.csv` | Collection enrichie (généré) |
-| `bibliotheque/` | Decks générés sauvegardés (créé auto) |
-| `exports/` | Decklists formatées pour sites d'analyse (créé auto) |
-| `logs/` | Logs d'exécution par deck (créé auto) |
+## 📁 Structure des Fichiers
+
+```
+MTG-DeckGenPy/
+├── README.md                       # Documentation principale
+├── GUIDE_RAPIDE.md                 # Guide de démarrage rapide
+├── GUIDE_GUI.md                    # Guide de l'interface graphique
+├── LICENSE                         # Licence MIT
+├── requirements.txt                # Dépendances Python
+├── .gitignore                      # Fichiers à exclure de Git
+├── run.bat                         # Lancement rapide CLI (Windows)
+├── run.sh                          # Lancement rapide CLI (Linux/Mac)
+├── run_gui.bat                     # Lancement rapide GUI (Windows)
+│
+├── scripts/                        # Scripts Python
+│   ├── deck_generator.py           # ⭐ MOTEUR COMMUN (CLI + GUI)
+│   ├── commander_generator3_0.py   # Interface CLI (Terminal)
+│   ├── gui_app.py                  # Interface GUI (NiceGUI)
+│   ├── enriching_collection.py     # Script d'enrichissement
+│   └── ...backup.py                # Anciennes versions (backup)
+│
+├── conf/                           # Configuration
+│   ├── config.yaml                 # Configuration active
+│   └── config.example.yaml         # Configuration exemple
+│
+├── models/                         # Modèles
+│   └── collection_modele.csv       # Modèle de collection
+│
+├── data/                           # Données utilisateur
+│   ├── collection.csv              # Ta collection (à remplir)
+│   └── collection_enriched.csv     # Généré automatiquement
+│
+├── .qwen/                          # Contexte du projet
+│   └── context.md                  # Ce fichier
+│
+├── bibliotheque/                   # Decks générés sauvegardés
+├── exports/                        # Decklists formatées pour sites d'analyse
+└── logs/                           # Logs d'exécution par deck
+```
+
+---
 
 ## ⚙️ Configuration actuelle (`conf/config.yaml`)
 
@@ -41,112 +92,198 @@ draw_target: 10
 removal_target: 8
 wipe_target: 2
 total_cards: 99
-enable_tribe_selection: false
+enable_tribe_selection: true
 check_existing_decks: true        # Exclut les cartes déjà utilisées
 ```
 
-## 🎮 Brackets EDH officiels supportés
-
-| Bracket | Nom | Game Changers | Tutors | Combos Infinis |
-|---------|-----|---------------|--------|----------------|
-| 1 | Exhibition | 0 | 2 | ❌ |
-| 2 | Core | 0 | 4 | ❌ |
-| 3 | Upgraded | 3 | 6 | ❌ |
-| 4 | Optimized | ∞ | ∞ | ✅ |
-
-## 📝 Modifications récentes
-- **2026-03-05** : Affichage coloré des symboles de mana (⚪🔵⚫🔴🟢)
-- **2026-03-05** : Logging complet (effet tee -a) dans logs/
-- **2026-03-05** : Correction sélection intelligente (score préservé)
-- **2026-03-05** : Warning doublons avec liste des cartes
-- **2026-03-05** : Option check_existing_decks (exclusion par nom de carte)
-- **2026-03-05** : Structure dossiers (conf/, logs/, exports/, bibliotheque/)
-- **2026-03-05** : Scoring intelligent par synergie commandant
-- **2026-03-05** : Gestion couleurs (forces/faiblesses)
-- **2026-03-05** : Mana base intelligente (répartition par couleur)
-
-## 🔧 Fonctions utilitaires clés
-
-| Fonction | Rôle |
-|----------|------|
-| `detect_infinite_combo_potential()` | Détecte les combos infinis |
-| `detect_mass_land_destruction()` | Détecte la négation de terrain |
-| `detect_extra_turn()` | Détecte les tours supplémentaires |
-| `detect_tutor()` | Détecte les tutors |
-| `pick_unique()` | Sélectionne des cartes uniques avec contraintes |
-| `analyser_conformite_bracket()` | Vérifie la conformité du deck au bracket |
-| `afficher_rapport_bracket()` | Affiche le rapport de vérification |
-| `calculer_score_puissance()` | Calcule un score 1-10 de puissance |
-| `analyser_coherence_deck()` | Analyse la cohérence interne du deck |
-| `analyser_pre_requis_bracket()` | Analyse détaillée des pré-requis par bracket |
-| `afficher_pre_requis_bracket()` | Affiche les pré-requis et cartes détectées |
-| `extraire_tribus_commandant()` | Extrait tribus et thèmes du commandant |
-| `calculer_synergie_commandant()` | Score la synergie d'une carte avec le commandant |
-| `calculer_bonus_couleur()` | Applique les forces/faiblesses des couleurs |
-| `score_card()` | Score intelligent d'une carte (synergie + utilité) |
-| `score_terrain()` | Score les terrains par utilité |
-| `normalize_card_name()` | Normalise les noms de cartes (exclut set/numéro) |
-| `format_colors()` | Formate les couleurs avec symboles (⚪🔵⚫🔴🟢) |
-| `TeeHandler` | Redirige sortie console + fichier log (tee -a) |
+---
 
 ## 🚀 Utilisation
 
+### Interface Graphique (Recommandé)
 ```bash
-python scripts/commander_generator3.0.py
+# Windows
+run_gui.bat
+
+# Linux/Mac
+python scripts/gui_app.py
+
+# Puis ouvrir http://localhost:8080
 ```
 
-1. Choisir le bracket (1-4)
-2. Sélectionner un commandant (affiché avec symboles de mana ⚪🔵⚫🔴🟢)
-3. (Optionnel) Choisir une tribu
-4. Le deck est généré dans `bibliotheque/`
-5. **Rapport de vérification** affiché avec score de puissance
-6. **Analyse détaillée** des pré-requis par bracket
-7. **Export decklist** dans `exports/` pour analyse sur brackcheck.com
-8. **Warning des doublons** avec les decks existants
-9. **Log complet** sauvegardé dans `logs/Nom-Commandant_YYYYMMDD_HHMMSS.log`
-10. Copie automatique vers Dropbox (si disponible)
-
-## 📌 Notes importantes
-- Les cartes "Game Changers" sont listées dans `conf/config.yaml`
-- `check_existing_decks: true` exclut les cartes déjà utilisées (par nom normalisé)
-- `normalize_card_name()` ignore set code et numéro de collecte
-- Encodage des fichiers : UTF-8 avec fallback cp1252/latin-1
-- Le scoring intelligent préserve les synergies pendant toute la sélection
-- Les terrains de base sont exclus des statistiques de CMC
-- Les logs contiennent EXACTEMENT la sortie du terminal (mot pour mot)
-- Les symboles de mana n'affichent pas l'incolore (C)
-
-## 🔧 Pré-requis d'installation
-
-### Python
-- Python 3.8 ou supérieur
-- pip (gestionnaire de paquets Python)
-
-### Bibliothèques Python
+### Terminal (CLI)
 ```bash
-pip install pandas pyyaml
+# Windows
+run.bat
+
+# Linux/Mac
+chmod +x run.sh && ./run.sh
+
+# Ou directement
+python scripts/commander_generator3_0.py
 ```
 
-### Fichiers requis
-1. `data/collection.csv` - Ta collection de cartes (format modèle fourni)
-2. `scripts/enriching_collection.py` - Script pour enrichir la collection avec les données Scryfall
-3. `conf/config.yaml` - Configuration (copie depuis `conf/config.example.yaml`)
+---
 
-### Structure des fichiers
+## 🔧 Fonctions du Moteur Commun (`deck_generator.py`)
+
+| Fonction | Rôle |
+|----------|------|
+| `load_collection()` | Charge la collection depuis CSV |
+| `load_library()` | Charge les decks existants pour éviter doublons |
+| `generate_deck()` | **Fonction principale** de génération de deck |
+| `save_deck()` | Sauvegarde dans bibliotheque/ et exports/ |
+| `score_card()` | Score intelligent d'une carte (synergie + utilité) |
+| `calculer_synergie_commandant()` | Score la synergie d'une carte avec le commandant |
+| `pick_unique()` | Sélectionne des cartes uniques avec contraintes bracket |
+| `normalize_card_name()` | Normalise les noms de cartes (exclut set/numéro) |
+| `format_colors()` | Formate les couleurs avec symboles (⚪🔵⚫🔴🟢) |
+| `extract_tribes()` | Extrait les tribus du type_line |
+| `detect_tutor()` | Détecte les tutors |
+| `detect_infinite_combo_potential()` | Détecte les combos infinis |
+| `detect_mass_land_destruction()` | Détecte la négation de terrain |
+| `detect_extra_turn()` | Détecte les tours supplémentaires |
+
+---
+
+## 🏷️ Filtre de Tribu
+
+**IMPORTANT :** Le filtre de tribu ne s'applique **QU'AUX CRÉATURES**.
+
+### Code (`deck_generator.py` ligne ~452)
+```python
+# Filtre tribu optionnel (créatures uniquement)
+if tribes:
+    def apply_tribe_filter(row):
+        tl = str(row["type_line"]).lower()
+        if 'creature' in tl:
+            return any(tr.lower() in tl for tr in tribes)
+        return True  # Les non-créatures sont toujours incluses
+
+    mask = legal_cards.apply(apply_tribe_filter, axis=1)
+    legal_cards = legal_cards[mask]
+    log_msg(f"🏷️ Filtre tribu appliqué: {', '.join(tribes)} (créatures uniquement)")
 ```
-MTG-DeckGenPy/
-├── scripts/
-│   ├── commander_generator3.0.py    # Script principal
-│   └── enriching_collection.py       # Script d'enrichissement
-├── conf/
-│   ├── config.yaml                   # Configuration active
-│   └── config.example.yaml           # Configuration exemple
-├── models/
-│   └── collection_modele.csv         # Modèle de collection
-├── data/
-│   ├── collection.csv                # Ta collection (à créer)
-│   └── collection_enriched.csv       # Généré automatiquement
-├── bibliotheque/                     # Decks générés (créé auto)
-├── exports/                          # Decklists pour analyse (créé auto)
-└── logs/                             # Logs d'exécution (créé auto)
+
+### Comportement
+- ✅ **Créatures** : Filtrées par tribu sélectionnée
+- ✅ **Non-créatures** (ramp, draw, removal, wipes, terrains) : **TOUJOURS incluses**
+- ✅ **Log** : Message explicite "(créatures uniquement)"
+
+---
+
+## 📊 Exemple de Deck Généré avec Filtre "Vampire"
+
 ```
+Commandant: Edgar Markov
+Filtre: Vampire (créatures uniquement)
+
+--- CREATURES (25) ---
+25 créatures Vampire uniquement
+  1x Blood Artist
+  1x Edgar Markov
+  1x Vampire Champion
+  ...
+
+--- SORTS ET ARTIFACTS (37) ---
+Toutes les cartes ramp, draw, removal, artifacts
+  1x Sol Ring
+  1x Arcane Signet
+  1x Vampiric Tutor
+  ... (NON filtrés par tribu)
+
+--- TERRAINS (37) ---
+Tous les terrains
+  10x Swamp
+  1x Command Tower
+  ... (NON filtrés par tribu)
+```
+
+---
+
+## 🎨 Interface Graphique (NiceGUI)
+
+### Fonctionnalités GUI
+1. **📊 Sélection du Bracket** (1-4) avec descriptions
+2. **🎯 Choix du Commandant** :
+   - Recherche dans **nom + oracle text + tribu**
+   - Aperçu avec image Scryfall (version française)
+   - Affichage en temps réel à droite
+3. **🏷️ Filtre de Tribu** :
+   - Chargement automatique à la sélection du commandant
+   - Affiche le **nombre de créatures par tribu**
+   - Barre de recherche + boutons "Tout"/"Aucun"
+   - 6 colonnes pour optimiser l'espace
+4. **⚡ Génération** :
+   - Journal en temps réel
+   - Utilise `deck_generator.py` (MÊME LOGIQUE QUE CLI)
+5. **📚 Bibliothèque** :
+   - Page dédiée `/library`
+   - Grille des decks avec images des commandants
+   - Menu de chargement avec progression (barre + compteur + %)
+   - Dialog de détails avec decklist + bouton copier
+
+### Menu de Navigation
+- **🎴 MTG DeckGenPy** : Bouton toujours visible → retour à l'accueil
+- **📚 Bibliothèque** : Bouton dans l'en-tête → page bibliothèque
+
+---
+
+## 📝 Modifications Récentes (2026-03-07)
+
+### Architecture
+- ✨ **Création de `deck_generator.py`** : Moteur commun CLI + GUI
+- ✨ **Refonte de `commander_generator3_0.py`** : Utilise `deck_generator.py`
+- ✨ **Refonte de `gui_app.py`** : Utilise `deck_generator.py`
+- ✅ **Garantie** : CLI et GUI génèrent les MÊMES decks
+
+### Interface Graphique
+- ✨ Menu "🎴 MTG DeckGenPy" toujours visible (retour accueil)
+- ✨ Recherche étendue (nom + oracle text + tribu)
+- ✨ Affichage de l'image du commandant (Scryfall FR)
+- ✨ Aperçu en temps réel à droite de la liste
+- ✨ Tribus : chargement automatique + compteur par tribu
+- ✨ Bibliothèque : page dédiée avec progression de chargement
+- ✨ Progression : barre + compteur + pourcentage
+- ✨ Decklist : bouton copier dans le presse-papier
+
+### Filtre de Tribu
+- ✅ **Ne s'applique QU'AUX CRÉATURES**
+- ✅ Les non-créatures (ramp, draw, removal, terrains) sont TOUJOURS incluses
+- ✅ Message explicite dans le log : "(créatures uniquement)"
+
+---
+
+## 🛠️ Dépannage
+
+### `collection_enriched.csv` introuvable
+```bash
+# Lance le script d'enrichissement
+python scripts/enriching_collection.py
+```
+
+### L'interface GUI ne se lance pas
+```bash
+# Vérifie les dépendances
+pip install -r requirements.txt
+
+# Ou directement
+pip install nicegui requests pandas pyyaml
+```
+
+### Erreur de port 8080
+Modifier le port dans `scripts/gui_app.py` :
+```python
+ui.run(port=8081)  # Changer 8080 par 8081
+```
+
+---
+
+## 📞 Support
+
+- **Issues GitHub** : Bugs et demandes de fonctionnalités
+- **Documentation** : `README.md` (CLI) et `GUIDE_GUI.md` (GUI)
+
+---
+
+**Bon jeu et bons decks ! 🎴**

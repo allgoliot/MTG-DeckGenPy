@@ -52,7 +52,7 @@ chmod +x run.sh
 
 **Commande directe :**
 ```bash
-python scripts/commander_generator3.0.py
+python scripts/commander_generator3_0.py
 ```
 
 ---
@@ -62,7 +62,7 @@ python scripts/commander_generator3.0.py
 | Commande | Description |
 |----------|-------------|
 | `run.bat` ou `./run.sh` | Lancement rapide |
-| `python scripts/commander_generator3.0.py` | Générer un deck |
+| `python scripts/commander_generator3_0.py` | Générer un deck |
 | `python scripts/enriching_collection.py` | Mettre à jour la collection |
 | `pip install -r requirements.txt` | Installer les dépendances |
 
@@ -73,7 +73,7 @@ python scripts/commander_generator3.0.py
 ```
 MTG-DeckGenPy/
 ├── scripts/
-│   └── commander_generator3.0.py   # ← Script principal
+│   └── commander_generator3_0.py   # ← Script principal
 ├── conf/
 │   ├── config.yaml                 # ← Configuration (à créer)
 │   └── config.example.yaml         # ← Exemple

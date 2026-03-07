@@ -28,7 +28,7 @@ REM Lancer le generateur
 echo.
 echo Lancement du generateur de decks...
 echo.
-python scripts\commander_generator3.0.py
+python scripts\commander_generator3_0.py
 
 echo.
 echo ========================================

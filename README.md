@@ -134,7 +134,23 @@ check_existing_decks: true        # Éviter les doublons
 
 ### 2. Lancer le générateur
 
-**Option A - Script de lancement rapide :**
+**🖥️ Option A - Interface Graphique (Recommandé) :**
+
+Windows :
+```bash
+run_gui.bat
+```
+
+Linux/Mac :
+```bash
+python scripts/gui_app.py
+```
+
+Puis ouvrez **http://localhost:8080** dans votre navigateur.
+
+---
+
+**⌨️ Option B - Terminal (CLI) :**
 
 Windows :
 ```bash
@@ -147,10 +163,10 @@ chmod +x run.sh
 ./run.sh
 ```
 
-**Option B - Commande directe :**
+**Option C - Commande directe :**
 
 ```bash
-python scripts/commander_generator3.0.py
+python scripts/commander_generator3_0.py
 ```
 
 ### 3. Suivre le processus
@@ -240,7 +256,7 @@ MTG-DeckGenPy/
 ├── run.sh                          # Lancement rapide (Linux/Mac)
 │
 ├── scripts/                        # Scripts Python
-│   ├── commander_generator3.0.py   # Script principal
+│   ├── commander_generator3_0.py   # Script principal
 │   ├── enriching_collection.py     # Script d'enrichissement
 │   └── ...                         # Anciennes versions
 │

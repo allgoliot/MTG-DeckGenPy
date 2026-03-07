@@ -25,7 +25,7 @@ fi
 echo ""
 echo "Lancement du générateur de decks..."
 echo ""
-python3 scripts/commander_generator3.0.py
+python3 scripts/commander_generator3_0.py
 
 echo ""
 echo "========================================"

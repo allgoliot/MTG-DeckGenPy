@@ -866,7 +866,16 @@ def library_page():
 
                     try:
                         with open(deck_file, 'r', encoding='utf-8') as f:
-                            card_count = sum(1 for line in f if line.strip() and not line.startswith('//'))
+                            card_count = 0
+                            for line in f:
+                                line = line.strip()
+                                # Ignorer les commentaires
+                                if line.startswith('//'):
+                                    continue
+                                # Lire les cartes (quantité + nom)
+                                parts = line.split(maxsplit=1)
+                                if len(parts) >= 1 and parts[0].isdigit():
+                                    card_count += int(parts[0])  # Additionner les quantités
                     except:
                         pass
 
@@ -874,7 +883,10 @@ def library_page():
 
                     # Afficher le deck dans la grille
                     with deck_grid:
-                        with ui.card().classes('w-full cursor-pointer hover:shadow-lg transition-shadow') as deck_card:
+                        def on_deck_click(dn=deck_name):
+                            ui.navigate.to(f'/deck/{dn}')
+                        
+                        with ui.card().classes('w-full cursor-pointer hover:shadow-lg transition-shadow').on('click', on_deck_click):
                             with ui.column().classes('w-full items-center p-4'):
                                 if image_url:
                                     ui.image(image_url).classes('w-full object-contain rounded-lg shadow-lg').style('aspect-ratio: 2/3;')
@@ -888,9 +900,6 @@ def library_page():
                                     ui.badge(bracket_info).classes('bg-blue-100 text-blue-800 mt-1')
 
                                 ui.label(f'{card_count} cartes').classes('text-sm text-gray-500 mt-1')
-                            
-                            # Rendre toute la carte cliquable
-                            deck_card.on('click', lambda dn=deck_name: ui.navigate.to(f'/deck/{dn}'))
 
                     # Délai pour voir chaque deck s'afficher progressivement
                     await asyncio.sleep(0.15)
@@ -959,6 +968,8 @@ def deck_details_page(deck_name: str):
             progress_bar = ui.linear_progress(value=0, show_value=False).classes('w-full mt-4')
     
     # Parser le deck
+    import re
+    
     commander_name = ""
     cards = []
     stats = {
@@ -1003,11 +1014,9 @@ def deck_details_page(deck_name: str):
             if not first_card_found:
                 parts = line.split(maxsplit=1)
                 if len(parts) == 2 and parts[0].isdigit():
-                    commander_name = parts[1]
                     # Nettoyer le nom (enlever les codes entre parenthèses et *F*)
-                    import re
-                    commander_name = re.sub(r'\s*\([^)]*\)\s*.*$', '', commander_name).strip()
-                    cards.append({'qty': int(parts[0]), 'name': parts[1]})
+                    commander_name = re.sub(r'\s*\([^)]*\)\s*.*$', '', parts[1]).strip()
+                    cards.append({'qty': int(parts[0]), 'name': commander_name, 'is_commander': True})
                     first_card_found = True
                 continue
 
@@ -1016,7 +1025,9 @@ def deck_details_page(deck_name: str):
             if len(parts) == 2 and parts[0].isdigit():
                 qty = int(parts[0])
                 name = parts[1]
-                cards.append({'qty': qty, 'name': name})
+                # Nettoyer le nom aussi pour les autres cartes
+                name = re.sub(r'\s*\([^)]*\)\s*.*$', '', name).strip()
+                cards.append({'qty': qty, 'name': name, 'is_commander': False})
     except Exception as e:
         import traceback
         ui.label(f'Erreur de lecture: {e}').classes('text-red-500')
@@ -1046,6 +1057,9 @@ def deck_details_page(deck_name: str):
                     stats['planeswalkers'] += card['qty']
                 else:
                     stats['autres'] += card['qty']
+    
+    # Calculer le total des cartes directement depuis cards
+    total_cards_count = sum(card['qty'] for card in cards)
 
     # Fonction pour afficher le contenu
     def show_content():
@@ -1111,10 +1125,9 @@ def deck_details_page(deck_name: str):
                                     ui.label('Terrains').classes('font-bold text-yellow-700')
                                     ui.label(f'{stats["terrains"]}').classes('text-3xl font-bold')
 
-                            total = sum(stats.values())
                             with ui.card().classes('p-4 bg-gradient-to-br from-purple-100 to-blue-100'):
                                 ui.label('Total').classes('font-bold text-purple-700')
-                                ui.label(f'{total}').classes('text-3xl font-bold')
+                                ui.label(f'{total_cards_count}').classes('text-3xl font-bold')
 
             # Courbe de mana
             mana_curve = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0}
@@ -1153,33 +1166,55 @@ def deck_details_page(deck_name: str):
             # Cartes par type avec visuels
             def get_card_type(card_name):
                 """Détermine le type d'une carte."""
-                if state.collection is None:
-                    return 'autres'
+                if state.collection is not None:
+                    norm = engine.normalize_card_name(card_name)
+                    match = state.collection[state.collection['name'].str.lower() == norm]
 
-                norm = engine.normalize_card_name(card_name)
-                match = state.collection[state.collection['name'].str.lower() == norm]
+                    if not match.empty:
+                        tl = str(match.iloc[0].get('type_line', '')).lower()
 
-                if match.empty:
-                    return 'autres'
-
-                tl = str(match.iloc[0].get('type_line', '')).lower()
-
-                if 'land' in tl:
-                    return 'terrains'
-                elif 'creature' in tl:
-                    return 'creatures'
-                elif 'artifact' in tl:
-                    return 'artifacts'
-                elif 'enchantment' in tl:
-                    return 'enchantements'
-                elif 'sorcery' in tl:
-                    return 'rituels'
-                elif 'instant' in tl:
-                    return 'ephemeres'
-                elif 'planeswalker' in tl:
-                    return 'planeswalkers'
-                else:
-                    return 'autres'
+                        if 'land' in tl:
+                            return 'terrains'
+                        elif 'creature' in tl:
+                            return 'creatures'
+                        elif 'artifact' in tl:
+                            return 'artifacts'
+                        elif 'enchantment' in tl:
+                            return 'enchantements'
+                        elif 'sorcery' in tl:
+                            return 'rituels'
+                        elif 'instant' in tl:
+                            return 'ephemeres'
+                        elif 'planeswalker' in tl:
+                            return 'planeswalkers'
+                
+                # Fallback: essayer de récupérer le type depuis Scryfall
+                try:
+                    encoded_name = urllib.parse.quote(card_name)
+                    url = f"https://api.scryfall.com/cards/named?fuzzy={encoded_name}"
+                    response = requests.get(url, timeout=5)
+                    if response.status_code == 200:
+                        data = response.json()
+                        tl = data.get('type_line', '').lower()
+                        
+                        if 'land' in tl:
+                            return 'terrains'
+                        elif 'creature' in tl:
+                            return 'creatures'
+                        elif 'artifact' in tl:
+                            return 'artifacts'
+                        elif 'enchantment' in tl:
+                            return 'enchantements'
+                        elif 'sorcery' in tl:
+                            return 'rituels'
+                        elif 'instant' in tl:
+                            return 'ephemeres'
+                        elif 'planeswalker' in tl:
+                            return 'planeswalkers'
+                except Exception:
+                    pass
+                
+                return 'autres'
 
             # Grouper les cartes par type (exclure le commandant)
             cards_by_type = {
@@ -1195,8 +1230,8 @@ def deck_details_page(deck_name: str):
 
             for card in cards:
                 # Exclure le commandant du regroupement par type
-                if card['name'] == commander_name:
-                    continue
+                if card.get('is_commander', False):
+                    continue  # C'est le commandant, on l'exclut
                 card_type = get_card_type(card['name'])
                 cards_by_type[card_type].append(card)
 
@@ -1265,26 +1300,44 @@ def deck_details_page(deck_name: str):
 
     # Chargement asynchrone avec préchargement des images
     total_cards = len(cards)
-    
+
     async def preload_images():
-        # Précharger toutes les images dans le cache
-        for i, card in enumerate(cards):
-            get_card_image_url(card['name'])  # Met en cache
-            loading_info.text = f'{i + 1} / {total_cards} cartes'
-            progress_bar.value = (i + 1) / total_cards if total_cards > 0 else 1
-            await asyncio.sleep(0.02)  # 20ms par carte pour voir la progression
-        
-        # Petit délai supplémentaire
-        await asyncio.sleep(0.2)
-    
+        try:
+            # Précharger toutes les images dans le cache
+            for i, card in enumerate(cards):
+                try:
+                    get_card_image_url(card['name'])  # Met en cache
+                except Exception:
+                    pass  # Ignorer les erreurs de récupération d'image
+                try:
+                    loading_info.text = f'{i + 1} / {total_cards} cartes'
+                    progress_bar.value = (i + 1) / total_cards if total_cards > 0 else 1
+                except RuntimeError:
+                    # La page a été quittée
+                    return
+                await asyncio.sleep(0.02)  # 20ms par carte pour voir la progression
+
+            # Petit délai supplémentaire
+            await asyncio.sleep(0.2)
+        except RuntimeError:
+            # La page a été quittée pendant le chargement
+            pass
+        except Exception:
+            # Autre erreur
+            pass
+
     # Démarrer le préchargement
     asyncio.create_task(preload_images())
-    
+
     # Afficher le contenu après le chargement (avec timer pour le contexte)
     def finish_loading():
-        loading_container.delete()
-        show_content()
-    
+        try:
+            loading_container.delete()
+            show_content()
+        except RuntimeError:
+            # La page a été quittée
+            pass
+
     ui.timer(total_cards * 0.02 + 0.3, finish_loading, once=True)
 
 

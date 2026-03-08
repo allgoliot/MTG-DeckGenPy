@@ -1,0 +1,23 @@
+# ==========================================
+# MTG DeckGenPy - Fichier des Utilisateurs
+# ==========================================
+# Format:
+#   username:
+#     password: "votre_mot_de_passe"
+#     role: "admin" ou "user"
+# ==========================================
+
+users:
+  admin:
+    password: "admin123"
+    role: "admin"
+  
+  user:
+    password: "user123"
+    role: "user"
+
+# ==========================================
+# RÔLES :
+# - admin: Accès complet (génération, bibliothèque, suppression)
+# - user: Accès limité (génération, consultation bibliothèque)
+# ==========================================

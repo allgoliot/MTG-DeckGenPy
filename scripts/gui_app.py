@@ -618,8 +618,23 @@ def render_home_content():
                     log_to_ui(traceback.format_exc())
                     ui.notify(error_msg, type='negative', timeout=10000)
 
-            def show_results(biblio_file, export_file):
+            # Stocker les références pour les résultats
+            results_data = {'biblio_file': None, 'export_file': None}
+            
+            # Dialog de chargement pour la génération
+            with ui.dialog() as generation_dialog, ui.card().classes('w-[400px] items-center p-6'):
+                ui.spinner(color='primary', size='xl').classes('mb-4')
+                ui.label('Génération du deck en cours...').classes('text-xl font-bold mb-4')
+                generation_progress = ui.label('').classes('text-sm text-gray-500')
+
+            def show_results():
                 """Affiche les résultats."""
+                if not results_data['biblio_file'] or not results_data['export_file']:
+                    return
+                    
+                biblio_file = results_data['biblio_file']
+                export_file = results_data['export_file']
+                
                 with ui.dialog() as dlg, ui.card().classes('w-[600px]'):
                     ui.label('✅ Deck Généré avec Succès!').classes('text-2xl font-bold text-green-600')
                     ui.separator()
@@ -654,6 +669,75 @@ def render_home_content():
                         ui.button('Fermer', on_click=dlg.close).props('flat')
 
                 dlg.open()
+
+            def generate():
+                """Génère le deck en utilisant le moteur commun."""
+                # Récupérer IP pour logging
+                ip = ui.context.client.ip if hasattr(ui.context.client, 'ip') else 'unknown'
+                
+                if not state.commander:
+                    ui.notify('⚠️ Veuillez sélectionner un commandant', type='warning')
+                    return
+
+                # Afficher le dialog de chargement
+                generation_progress.text = 'Initialisation...'
+                generation_dialog.open()
+                
+                try:
+                    progress_log.clear()
+                    log_to_ui("🚀 Démarrage de la génération...")
+                    generation_progress.text = 'Chargement de la collection...'
+                    
+                    # Log la demande de génération
+                    log_interaction('GENERATE_DECK', f'Bracket: {bracket_select.value}, Commander: {state.commander["name"]}', ip)
+
+                    # Utiliser le moteur commun (MÊME LOGIQUE QUE CLI)
+                    generation_progress.text = f'Génération du deck (Bracket {bracket_select.value})...'
+                    result = engine.generate_deck(
+                        bracket_level=bracket_select.value,
+                        commander=state.commander,
+                        collection=state.collection,
+                        library_cards_used=state.library_cards_used,
+                        tribes=state.selected_tribes if state.selected_tribes else None,
+                        log_callback=log_to_ui
+                    )
+
+                    state.deck = result['deck']
+                    state.constraint_stats = result['constraint_stats']
+
+                    # Sauvegarder
+                    generation_progress.text = 'Sauvegarde du deck...'
+                    biblio_file, export_file = engine.save_deck(
+                        deck=result['deck'],
+                        commander_name=result['commander'],
+                        bracket_level=result['bracket_level'],
+                        constraint_stats=result['constraint_stats'],
+                        collection=state.collection  # Passer la collection pour les stats
+                    )
+
+                    # Stocker pour affichage
+                    results_data['biblio_file'] = biblio_file
+                    results_data['export_file'] = export_file
+
+                    log_to_ui(f"\n✅ Deck sauvegardé: {biblio_file.name}")
+                    log_to_ui(f"📤 Export: {export_file.name}")
+                    
+                    # Log la génération réussie
+                    log_interaction('DECK_GENERATED', f'Commander: {result["commander"]}, Cards: {len(result["deck"])}', ip)
+                    
+                    # Fermer le dialog de chargement
+                    generation_dialog.close()
+
+                    # Afficher les résultats (après que generate() soit terminé)
+                    ui.timer(0.1, show_results, once=True)
+
+                except Exception as e:
+                    import traceback
+                    generation_dialog.close()
+                    error_msg = f"❌ Erreur: {str(e)}"
+                    log_to_ui(error_msg)
+                    log_to_ui(traceback.format_exc())
+                    ui.notify(error_msg, type='negative', timeout=10000)
 
             ui.button('⚡ Générer le Deck', on_click=generate).classes('w-full text-lg py-2')
 
@@ -725,14 +809,12 @@ def library_page():
         with loading_card:
             ui.spinner(color='primary', size='xl').classes('mb-4')
             ui.label('Chargement de la bibliothèque...').classes('text-xl font-bold mb-4')
-            # Barre de progression (0% → 100% sans affichage numérique)
-            progress_bar = ui.linear_progress(value=0, show_value=False).classes('w-full max-w-md')
 
         # Grille des decks (se remplit progressivement en dessous)
         deck_grid = ui.grid().classes('grid-cols-3 gap-6 w-full')
 
-        def load_library_sync():
-            """Charge la bibliothèque de manière synchrone."""
+        async def load_library_async():
+            """Charge la bibliothèque de manière asynchrone avec progression visible."""
             try:
                 if not engine.BIBLIO_DIR.exists():
                     with loading_card:
@@ -752,15 +834,9 @@ def library_page():
 
                 total_decks = len(decks)
 
-                # Initialiser la barre à 0
-                progress_bar.value = 0
-
-                # Charger les decks - progression directe
+                # Charger les decks un par un avec délai pour voir la progression
                 for idx, deck_file in enumerate(sorted(decks), start=1):
-                    # Mettre à jour la progression (0 → 100)
-                    progress = (idx / total_decks) * 100
-                    progress_bar.value = progress
-
+                    # Créer la carte du deck
                     with deck_grid:
                         with ui.card().classes('w-full cursor-pointer hover:shadow-lg transition-shadow').on('click', lambda f=deck_file: show_deck_details(f)):
                             commander_name = deck_file.stem.replace('-', ' ')
@@ -802,19 +878,22 @@ def library_page():
                                 except:
                                     pass
 
+                    # Délai pour voir chaque deck s'afficher progressivement
+                    await asyncio.sleep(0.1)
+
                 # Modifier le menu de chargement (reste en haut) une fois terminé
                 with loading_card:
                     loading_card.clear()
                     with loading_card:
                         ui.label('✅ Bibliothèque chargée').classes('text-xl font-bold text-green-600')
-                        ui.button('🔄 Actualiser', on_click=load_library_sync).classes('mt-2')
+                        ui.button('🔄 Actualiser', on_click=lambda: asyncio.create_task(load_library_async())).classes('mt-2')
 
             except Exception as e:
                 print(f"Erreur chargement bibliothèque: {e}")
                 return
 
-        # Charger la bibliothèque directement (pas de timer pour éviter erreurs async)
-        load_library_sync()
+        # Charger la bibliothèque après un court délai (pour afficher le loading card d'abord)
+        ui.timer(0.5, lambda: asyncio.create_task(load_library_async()), once=True)
 
         def show_deck_details(deck_file):
             """Affiche les détails d'un deck."""
